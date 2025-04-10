@@ -1,22 +1,91 @@
 #include "ShiftScheduling.h"
 using namespace std;
 
+int numSchedulesForHelper(const Set<Shift>& totalShifts, Set<Shift>& chosenShifts, int maxHours);
+void maxProfitScheduleHelper(const Set<Shift>& totalShifts, int maxHours, Set<Shift>& chosenShifts,
+                             int chosenProfit, Set<Shift>& maxProfitShifts, int& maxProfit);
+
 int numSchedulesFor(const Set<Shift>& shifts, int maxHours) {
-    /* TODO: Delete this comment and the lines below it, then implement
-     * this function.
-     */
-    (void) shifts;
-    (void) maxHours;
-    return -1;
+    if (maxHours < 0) {
+        error("maxHours is negative");
+    }
+
+    if (shifts.isEmpty()) {
+        return 0;
+    }
+
+    Set<Shift> chosenShifts;
+    int result = numSchedulesForHelper(shifts, chosenShifts, maxHours);
+    return result;
+}
+
+int numSchedulesForHelper(const Set<Shift>& totalShifts, Set<Shift>& chosenShifts, int maxHours) {
+    if (maxHours < 0) {
+        return 0;
+    }
+
+    if (maxHours == 0 || totalShifts.isEmpty()) {
+        return 1;
+    }
+
+    Shift chosenShift = totalShifts.first();
+
+    int notChooseShift = numSchedulesForHelper(totalShifts - chosenShift, chosenShifts, maxHours);
+
+    int chooseShift = 0;
+    if (chosenShifts.isEmpty() || !overlapsWith(chosenShift, chosenShifts.last())) {
+        chosenShifts += chosenShift;
+        chooseShift = numSchedulesForHelper(totalShifts - chosenShift, chosenShifts, maxHours - lengthOf(chosenShift));
+        chosenShifts -= chosenShift;
+    }
+
+    return notChooseShift + chooseShift;
 }
 
 Set<Shift> maxProfitSchedule(const Set<Shift>& shifts, int maxHours) {
-    /* TODO: Delete this comment and the lines below it, then implement
-     * this function.
-     */
-    (void) shifts;
-    (void) maxHours;
-    return {};
+    if (maxHours < 0) {
+        error("maxHours is negative");
+    }
+
+    if (shifts.isEmpty()) {
+        return {};
+    }
+
+    Set<Shift> chosenShifts;
+    Set<Shift> result;
+    int maxProfit = 0;
+    maxProfitScheduleHelper(shifts, maxHours, chosenShifts, 0, result, maxProfit);
+    return result;
+}
+
+void maxProfitScheduleHelper(const Set<Shift>& totalShifts, int maxHours, Set<Shift>& chosenShifts,
+                             int chosenProfit, Set<Shift>& maxProfitShifts, int& maxProfit) {
+    if (maxHours == 0 || totalShifts.isEmpty()) {
+        return;
+    }
+
+    Shift chosenShift = totalShifts.first();
+
+
+    maxProfitScheduleHelper(totalShifts - chosenShift, maxHours, chosenShifts, chosenProfit, maxProfitShifts, maxProfit);
+
+
+    if ((maxHours - lengthOf(chosenShift)) >= 0 &&
+        (chosenShifts.isEmpty() || !overlapsWith(chosenShift, chosenShifts.last()))) {
+
+        chosenShifts += chosenShift;
+        chosenProfit += profitFor(chosenShift);
+
+        if (chosenProfit > maxProfit) {
+            maxProfitShifts = chosenShifts;
+            maxProfit = chosenProfit;
+        }
+
+        maxProfitScheduleHelper(totalShifts - chosenShift, maxHours - lengthOf(chosenShift),
+                                chosenShifts, chosenProfit, maxProfitShifts, maxProfit);
+
+        chosenShifts -= chosenShift;
+    }
 }
 
 
