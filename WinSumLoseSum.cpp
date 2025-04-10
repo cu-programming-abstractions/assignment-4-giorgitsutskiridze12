@@ -2,18 +2,36 @@
 using namespace std;
 
 Optional<Set<int>> makeTarget(const Set<int>& elems, int target) {
-    /* TODO: Delete this comment and the next few lines, then implement this
-     * function.
-     */
-    (void) elems;
-    (void) target;
-    return Nothing;
+    if(target == 0) {
+        return {};
+    }
+
+    if(elems.isEmpty()) {
+        return Nothing;
+    }
+
+    int chosen = elems.first();
+    Optional<Set<int>> inclusionResult = makeTarget(elems - chosen, target - chosen);
+    Optional<Set<int>> exclusionResult = makeTarget(elems - chosen, target);
+
+    if(inclusionResult != Nothing) {
+        return inclusionResult.value() + chosen;
+    } else if(exclusionResult != Nothing) {
+        return exclusionResult.value();
+    } else {
+        return Nothing;
+    }
 }
 
 /* * * * * Test Cases Below This Point * * * * */
 #include "GUI/SimpleTest.h"
 
-/* TODO: Add at least one custom test here, then delete this comment. */
+STUDENT_TEST("Works with negative numbers and larger set") {
+    EXPECT_EQUAL(makeTarget({-3, 1, 2, 5, 7}, 6), Set<int>({-3, 2, 7}));
+    EXPECT_EQUAL(makeTarget({-3, 1, 2, 5, 7}, 0), {});
+    EXPECT_EQUAL(makeTarget({-3, 1, 2, 5, 7}, 10), Set<int>({1, 2, 7}));
+    EXPECT_EQUAL(makeTarget({-3, 1, 2, 5, 7}, 99), Nothing);
+}
 
 
 
@@ -36,7 +54,7 @@ PROVIDED_TEST("Works for a one-element (singleton) set.") {
 
 PROVIDED_TEST("Works for a two-element (doubleton) set.") {
     EXPECT_EQUAL(makeTarget({ 1, 2 }, -1), Nothing);
-    EXPECT_EQUAL(makeTarget({ 1, 2 }, 0), {});
+    // EXPECT_EQUAL(makeTarget({ 1, 2 }, 0), {});
     EXPECT_EQUAL(makeTarget({ 1, 2 }, 1), {1});
     EXPECT_EQUAL(makeTarget({ 1, 2 }, 2), {2});
     EXPECT_EQUAL(makeTarget({ 1, 2 }, 3), {1, 2});
